@@ -18,8 +18,10 @@ These instructions will help you set up and run the Markdown Remover on your loc
 
 ## Prerequisites
 
-- Python 3.11.8 or higher (required)
+- Python 3.11.8 or higher (strictly required)
 - PyQt6 (automatically installed during setup)
+- For Linux: X11 or Wayland desktop environment
+- For macOS: OS X 10.10 or higher
 
 ## Installation
 
@@ -27,44 +29,54 @@ The application includes automated installers for both Windows and Unix-based sy
 
 ### Windows Installation
 
-Run the PowerShell installer:
+Run the PowerShell installer as administrator:
 
 ```powershell
 .\installer.ps1
 ```
+
+The installer will:
+
+1. Verify Python 3.11.8+ is installed
+2. Create a virtual environment (.venv-HOSTNAME)
+3. Install required dependencies
+4. Create a desktop shortcut
+5. Generate launch_app.ps1
 
 ### Linux/macOS Installation
 
 Run the bash installer:
 
 ```bash
+chmod +x installer.sh
 ./installer.sh
 ```
 
-The installers will:
+The installer will:
 
-1. Check for Python 3.11.8 or higher
-2. Create a virtual environment specific to your hostname (.venv-HOSTNAME)
-3. Install all required dependencies (PyQt6 and related packages)
-4. Generate a launch script (launch_app.ps1 or launch_app.sh)
+1. Verify Python 3.11.8+ is installed
+2. Create a virtual environment (.venv-HOSTNAME)
+3. Install required dependencies
+4. For Linux: Create an application shortcut in the system menu
+5. For macOS: Create a proper .app bundle in the current directory
+6. Generate launch_app.sh
 
-## Usage
+## Running the Application
 
-### Starting the Application
+### Windows
 
-After installation, run the appropriate launch script:
+- Double-click the "Launch Markdown Stripper" shortcut on your desktop, or
+- Run `.\launch_app.ps1` from PowerShell
 
-**Windows**:
+### Linux
 
-```powershell
-.\launch_app.ps1
-```
+- Launch from your application menu, or
+- Run `./launch_app.sh` from terminal
 
-**Linux/macOS**:
+### macOS
 
-```bash
-./launch_app.sh
-```
+- Double-click the "Markdown Stripper.app" bundle, or
+- Run `./launch_app.sh` from terminal
 
 ### Using the Application
 
