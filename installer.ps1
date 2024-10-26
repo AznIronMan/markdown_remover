@@ -23,25 +23,21 @@ function Create-Venv {
     } else {
         Write-Host "Virtual environment already exists: $venvDir"
     }
-}
-function Activate-Venv {
-    $hostname = $env:COMPUTERNAME
-    $venvDir = ".venv-$hostname"
-    $venvScript = Join-Path $venvDir "Scripts\Activate.ps1"
-    if (Test-Path $venvScript) {
-        & $venvScript
-    }
+    return $venvDir
 }
 function Install-Requirements {
-    pip install --upgrade pip
-    pip install -r requirements.txt
+    param (
+        [string]$VenvDir
+    )
+    $pythonPath = Join-Path $VenvDir "Scripts\python.exe"
+    & $pythonPath -m pip install --upgrade pip
+    & $pythonPath -m pip install -r requirements.txt
 }
 Check-PythonVersion
-Create-Venv
-Activate-Venv
-Install-Requirements
-
-# Create launch_app.ps1 with proper PowerShell syntax
+$venvDir = Create-Venv
+$venvScript = Join-Path $venvDir "Scripts\Activate.ps1"
+& $venvScript
+Install-Requirements -VenvDir $venvDir
 $launchScript = @'
 $hostname = $env:COMPUTERNAME
 $venvDir = ".venv-$hostname"
@@ -50,10 +46,14 @@ if (-not (Test-Path $venvDir)) {
     python -m venv $venvDir
 }
 & "$venvScript"
-pip install --upgrade pip
-pip install -r requirements.txt
 python markdown_stripper.py
 '@
-
 Set-Content -Path "launch_app.ps1" -Value $launchScript -Encoding UTF8
-Write-Host "Installation complete. Use ./launch_app.ps1 to run the application."
+$WshShell = New-Object -comObject WScript.Shell
+$Shortcut = $WshShell.CreateShortcut("$(Get-Location)\Launch Markdown Stripper.lnk")
+$Shortcut.TargetPath = "powershell.exe"
+$Shortcut.Arguments = "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$(Get-Location)\launch_app.ps1`""
+$Shortcut.WorkingDirectory = "$(Get-Location)"
+$Shortcut.WindowStyle = 7
+$Shortcut.Save()
+Write-Host "Installation complete. Use ./launch_app.ps1 or the 'Launch Markdown Stripper' shortcut to run the application."

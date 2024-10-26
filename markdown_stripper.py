@@ -1,24 +1,25 @@
 import re
-import sys
 import socket
-from pathlib import Path
 import sqlite3
+import sys
+from pathlib import Path
 from typing import Optional
+
+from PyQt6.QtCore import QByteArray, QTimer
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
     QApplication,
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
-    QTextEdit,
-    QLabel,
-    QStatusBar,
     QDialog,
+    QHBoxLayout,
+    QLabel,
     QLineEdit,
+    QMainWindow,
+    QPushButton,
+    QStatusBar,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt6.QtGui import QAction
-from PyQt6.QtCore import QTimer, QByteArray
 
 
 class SettingsDialog(QDialog):
@@ -29,9 +30,7 @@ class SettingsDialog(QDialog):
         self.parent = parent
         self.setWindowTitle("Settings")
         self.setMinimumWidth(400)
-
         layout = QVBoxLayout()
-
         prompt_layout = QHBoxLayout()
         prompt_label = QLabel("Prompt Location:")
         self.prompt_path = QLineEdit()
@@ -42,7 +41,6 @@ class SettingsDialog(QDialog):
         prompt_layout.addWidget(self.prompt_path)
         prompt_layout.addWidget(self.path_status)
         layout.addLayout(prompt_layout)
-
         layout.addWidget(QLabel("Window Settings:"))
         window_info = QTextEdit()
         window_info.setPlainText(
@@ -52,7 +50,6 @@ class SettingsDialog(QDialog):
         window_info.setReadOnly(True)
         window_info.setMaximumHeight(100)
         layout.addWidget(window_info)
-
         button_layout = QHBoxLayout()
         save_button = QPushButton("Save Settings")
         save_button.clicked.connect(self.save_settings)
@@ -61,7 +58,6 @@ class SettingsDialog(QDialog):
         button_layout.addWidget(save_button)
         button_layout.addWidget(close_button)
         layout.addLayout(button_layout)
-
         self.setLayout(layout)
         self.check_path()
 
@@ -69,27 +65,27 @@ class SettingsDialog(QDialog):
         """Validate prompt file path and update status indicator"""
         path = Path(self.prompt_path.text())
         is_valid = path.exists() and path.is_file()
-        
-        # Update status indicator
         if is_valid:
             self.path_status.setText("✓")
             self.path_status.setStyleSheet("color: green;")
         else:
             self.path_status.setText("✗")
             self.path_status.setStyleSheet("color: red;")
-        
-        # Update main window's copy prompt button
         self.parent.copy_prompt_btn.setEnabled(is_valid)
         if is_valid:
-            self.parent.copy_prompt_btn.setToolTip("Copy prompt template to clipboard")
+            self.parent.copy_prompt_btn.setToolTip(
+                "Copy prompt template to clipboard"
+            )
         else:
-            self.parent.copy_prompt_btn.setToolTip(f"Prompt file not found: {path}")
+            self.parent.copy_prompt_btn.setToolTip(
+                f"Prompt file not found: {path}"
+            )
 
     def save_settings(self) -> None:
         """Save settings and close dialog"""
         self.parent.prompt_location = self.prompt_path.text()
         self.parent.save_settings()
-        self.parent.check_prompt_file()  # Update button state after saving
+        self.parent.check_prompt_file()
         self.parent.show_status("Settings saved", "red")
         self.close()
 
@@ -99,67 +95,46 @@ class MarkdownStripper(QMainWindow):
 
     def __init__(self) -> None:
         super().__init__()
-
-        # Initialization
         self.hostname = socket.gethostname().split(".")[0]
         self.db_path = Path(f"{self.hostname}.settings")
         self.prompt_location = "prompt.txt"
-
-        # Create the Copy Prompt button
         self.copy_prompt_btn = QPushButton("Copy Prompt")
         self.copy_prompt_btn.clicked.connect(self.copy_prompt)
-
-        # Initialize database and load settings
         self.init_database()
-        self.load_settings()  # No longer calls check_prompt_file
-
-        # Set up the window
+        self.load_settings()
         self.setWindowTitle("Markdown Stripper")
         self.setMinimumSize(600, 500)
         self.load_window_settings()
-
-        # Set up central widget and layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         layout = QVBoxLayout(central_widget)
-
-        # Add widgets to layout
         layout.addWidget(self.copy_prompt_btn)
-        self.check_prompt_file()  # Now safe to call
-
+        self.check_prompt_file()
         self.input_text = QTextEdit()
         self.input_text.setPlaceholderText("Paste markdown text here...")
         layout.addWidget(self.input_text)
-
         self.process_btn = QPushButton("Process")
         self.process_btn.clicked.connect(self.process_text)
         layout.addWidget(self.process_btn)
-
         self.output_text = QTextEdit()
         self.output_text.setPlaceholderText("Stripped text will appear here...")
         self.output_text.setReadOnly(True)
         layout.addWidget(self.output_text)
-
         button_layout = QVBoxLayout()
         self.copy_btn = QPushButton("Copy")
         self.clear_btn = QPushButton("Clear")
         self.exit_btn = QPushButton("Exit")
-
         button_layout.addWidget(self.copy_btn)
         button_layout.addWidget(self.clear_btn)
         button_layout.addWidget(self.exit_btn)
-
         self.copy_btn.clicked.connect(self.copy_text)
         self.clear_btn.clicked.connect(self.clear_text)
         self.exit_btn.clicked.connect(self.close)
-
         layout.addLayout(button_layout)
-
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_message = QLabel("Ready")
         self.status_bar.addWidget(self.status_message)
-
         self.create_menu_bar()
 
     def create_menu_bar(self) -> None:
@@ -208,7 +183,6 @@ class MarkdownStripper(QMainWindow):
         conn.commit()
         conn.close()
         self.save_window_settings()
-        # Removed self.check_prompt_file()
 
     def load_settings(self) -> None:
         """Load application settings from database"""
@@ -224,10 +198,8 @@ class MarkdownStripper(QMainWindow):
                 self.prompt_location = result[0]
             conn.close()
             self.load_window_settings()
-            # Removed self.check_prompt_file()
         except sqlite3.Error:
             self.prompt_location = "prompt.txt"
-            # Removed self.check_prompt_file()
 
     def save_window_settings(self) -> None:
         """Save window geometry to database"""
@@ -341,7 +313,9 @@ class MarkdownStripper(QMainWindow):
     def check_prompt_file(self) -> None:
         """Check if prompt file exists and enable/disable button accordingly"""
         prompt_path = Path(self.prompt_location)
-        self.copy_prompt_btn.setEnabled(prompt_path.exists() and prompt_path.is_file())
+        self.copy_prompt_btn.setEnabled(
+            prompt_path.exists() and prompt_path.is_file()
+        )
         if not self.copy_prompt_btn.isEnabled():
             self.copy_prompt_btn.setToolTip(
                 f"Prompt file not found: {self.prompt_location}"
