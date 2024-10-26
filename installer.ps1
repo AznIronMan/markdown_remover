@@ -40,16 +40,20 @@ Check-PythonVersion
 Create-Venv
 Activate-Venv
 Install-Requirements
-@"
+
+# Create launch_app.ps1 with proper PowerShell syntax
+$launchScript = @'
 $hostname = $env:COMPUTERNAME
 $venvDir = ".venv-$hostname"
 $venvScript = Join-Path $venvDir "Scripts\Activate.ps1"
 if (-not (Test-Path $venvDir)) {
     python -m venv $venvDir
 }
-& $venvScript
+& "$venvScript"
 pip install --upgrade pip
 pip install -r requirements.txt
 python markdown_stripper.py
-"@ | Out-File -Encoding UTF8 launch_app.ps1
+'@
+
+Set-Content -Path "launch_app.ps1" -Value $launchScript -Encoding UTF8
 Write-Host "Installation complete. Use ./launch_app.ps1 to run the application."
